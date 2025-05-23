@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	kafkaclient "github.com/likhithkp/banking-ledger-service/kafka"
+	"github.com/likhithkp/banking-ledger-service/kafkaclient"
 )
 
 func PublishTransaction(topic, key string, byteData []byte, host string) error {

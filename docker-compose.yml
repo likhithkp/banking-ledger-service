@@ -9,9 +9,31 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ledgerdb
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+    restart: always
+
+  migrate:
+    image: migrate/migrate:v4.15.2
+    container_name: migrate
+    volumes:
+      - ./:/app
+    working_dir: /app/db/psql
+    entrypoint: [""]
+    command:
+      - migrate
+      - -source
+      - file://migrations
+      - -database
+      - postgres://postgres:postgres@postgres:5432/ledgerdb?sslmode=disable
+      - up
+    depends_on:
+      - postgres
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -21,6 +43,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    restart: always
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -30,10 +53,28 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092"]
+      interval: 10s
+      retries: 5
+    restart: always
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint:
+      [
+        "/bin/bash",
+        "-c",
+        "cub kafka-ready -b kafka:9092 1 20 && kafka-topics --create --topic transactions --bootstrap-server kafka:9092 --partitions 3 --replication-factor 1 || true"
+      ]
 
   mongodb:
     image: mongo:6.0
@@ -45,6 +86,39 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password123
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\")'"]
+      interval: 10s
+      retries: 5
+    restart: always
+
+  api:
+    build: .
+    container_name: ledger-api
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    environment:
+      POSTGRES_URL: postgres://postgres:postgres@postgres:5432/ledgerdb?sslmode=disable
+      MONGO_URI: mongodb://admin:password123@mongodb:27017/?authSource=admin
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3001/health || exit 1"]
+      interval: 10s
+      retries: 5
 
 volumes:
   pgdata:

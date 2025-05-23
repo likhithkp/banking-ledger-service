@@ -11,7 +11,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/likhithkp/banking-ledger-service/db/mongo"
-	kafkaclient "github.com/likhithkp/banking-ledger-service/kafka"
+	"github.com/likhithkp/banking-ledger-service/kafkaclient"
 	"github.com/likhithkp/banking-ledger-service/shared"
 )
 

@@ -17,7 +17,7 @@ func main() {
 	psql.GetDB()
 	defer psql.CloseDB()
 
-	go services.ConsumeTransaction("localhost:9092", "transactionGroup", "transactions")
+	go services.ConsumeTransaction("kafka:9092", "transactionGroup", "transactions")
 
 	mux := http.NewServeMux()
 	routers.Router(mux)

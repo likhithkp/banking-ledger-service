@@ -16,7 +16,8 @@ func InitMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	uri := "mongodb://admin:password123@localhost:27017"
+	uri := "mongodb://admin:password123@mongodb:27017"
+
 	clientOpts := options.Client().ApplyURI(uri)
 
 	client, err := mongo.Connect(ctx, clientOpts)

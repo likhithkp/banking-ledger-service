@@ -9,7 +9,6 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	go.mongodb.org/mongo-driver v1.17.3
-	golang.org/x/net v0.21.0
 )
 
 require (

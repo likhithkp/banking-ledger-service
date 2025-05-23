@@ -52,7 +52,7 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = services.PublishTransaction("transactions", "transaction", bytes, "localhost:9092")
+	err = services.PublishTransaction("transactions", "transaction", bytes, "kafka:9092")
 	if err != nil {
 		log.Printf("Failed to publish transaction: %v\n", err)
 		helpers.JsonEncoder(w, "Internal server error", http.StatusInternalServerError, nil)
