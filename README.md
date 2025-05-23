@@ -104,20 +104,6 @@ docker exec -it mongodb mongosh -u admin -p password123 --authenticationDatabase
 
 ---
 
-## Testing
-
-```bash
-go test ./...
-```
-
-Tests include:
-
-- Unit tests (services, handlers)
-- Integration tests (Postgres, Mongo, Kafka)
-- End-to-end feature tests
-
----
-
 ## Troubleshooting
 
 - Make sure Kafka is addressed as `kafka:9092` **inside Docker**, not `localhost:9092`
